@@ -1,0 +1,67 @@
+project_id = "gohcqazhofdhkghfxfok"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_confirmations = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[functions.geocode-address]
+verify_jwt = false
+
+[functions.normalize-location]
+verify_jwt = false
+
+[functions.reverse-geocode]
+verify_jwt = false
+
+[functions.ip-geolocate]
+verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false
+
+[functions.comprehensive-backfill]
+verify_jwt = false
+
+[functions.ping-google-sitemap]
+verify_jwt = false
+
+[functions.og-meta]
+verify_jwt = false
+
+[functions.fetch-google-places]
+verify_jwt = false
+
+[functions.deactivate-expired-events]
+verify_jwt = false
+
+[functions.verify-offer-pin]
+verify_jwt = false
+
+[functions.merchant-api]
+verify_jwt = false
+
+[functions.create-donation-checkout]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.mcp]
+verify_jwt = false

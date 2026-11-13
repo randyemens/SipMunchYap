@@ -1,0 +1,148 @@
+// Mobile CTA Bar - Call, Directions, Website buttons for restaurant pages
+import { Button } from '@/components/ui/button';
+import { Phone, MapPin, Globe } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { getDeviceType } from '@/utils/analytics';
+
+interface MobileCTABarProps {
+  phoneNumber?: string | null;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  website?: string | null;
+  googleMapsUrl?: string | null;
+  merchantId?: number;
+}
+
+export const MobileCTABar: React.FC<MobileCTABarProps> = ({
+  phoneNumber,
+  address,
+  website,
+  googleMapsUrl,
+  merchantId,
+}) => {
+  const { track, trackFunnel } = useAnalytics();
+
+  const handlePhoneClick = () => {
+    
+    track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'phone_clicked',
+      merchantId,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'mobile_cta_bar',
+        phoneNumber: phoneNumber || undefined
+      }
+    });
+    
+    trackFunnel({
+      funnelStep: 'contact_clicked',
+      merchantId,
+      stepOrder: 6
+    });
+  };
+
+  const handleDirectionsClick = () => {
+    
+    track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'directions_clicked',
+      merchantId,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'mobile_cta_bar',
+        address: `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`
+      }
+    });
+    
+    trackFunnel({
+      funnelStep: 'contact_clicked',
+      merchantId,
+      stepOrder: 6
+    });
+  };
+
+  const handleWebsiteClick = () => {
+    
+    track({
+      eventType: 'click',
+      eventCategory: 'merchant_interaction',
+      eventAction: 'website_clicked',
+      merchantId,
+      metadata: {
+        deviceType: getDeviceType(),
+        component: 'mobile_cta_bar',
+        website: website || undefined
+      }
+    });
+    
+    trackFunnel({
+      funnelStep: 'contact_clicked',
+      merchantId,
+      stepOrder: 6
+    });
+  };
+
+  const directionsUrl = googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`
+  )}`;
+
+  const formattedWebsite = website && !website.startsWith('http') 
+    ? `https://${website}` 
+    : website;
+
+  
+
+  return (
+    <div className="fixed bottom-16 left-0 right-0 bg-background border-t border-border shadow-lg z-50 md:hidden">
+      <div className="flex items-center justify-around p-2 gap-2 max-w-screen-lg mx-auto">
+        {/* Call Button - Green */}
+        {phoneNumber && (
+          <Button
+            asChild
+            size="mobile"
+            className="flex-1 bg-success hover:bg-success/90 text-success-foreground shadow-md font-semibold text-xs h-14"
+          >
+            <a href={`tel:${phoneNumber}`} onClick={handlePhoneClick} className="flex flex-col items-center justify-center gap-1">
+              <Phone className="h-4 w-4" />
+              <span>Call</span>
+            </a>
+          </Button>
+        )}
+        
+        {/* Directions Button - Amber */}
+        <Button
+          asChild
+          size="mobile"
+          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md font-semibold text-xs h-14"
+          >
+            <a href={directionsUrl} target="_blank" rel="noopener noreferrer" onClick={handleDirectionsClick} className="flex flex-col items-center justify-center gap-1">
+            <MapPin className="h-4 w-4" />
+            <span>Directions</span>
+          </a>
+        </Button>
+
+        {/* Website Button - Secondary */}
+        {website && (
+          <Button
+            asChild
+            variant="secondary"
+            size="mobile"
+            className="flex-1 shadow-md font-semibold text-xs h-14"
+          >
+            <a href={formattedWebsite} target="_blank" rel="noopener noreferrer" onClick={handleWebsiteClick} className="flex flex-col items-center justify-center gap-1">
+              <Globe className="h-4 w-4" />
+              <span>Website</span>
+            </a>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};

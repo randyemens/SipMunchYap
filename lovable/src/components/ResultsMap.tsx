@@ -1,0 +1,466 @@
+
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import Map, { NavigationControl } from 'react-map-gl';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { MerchantMapPreviewCard } from '@/components/MerchantMapPreviewCard';
+import { MapInteractionTracker } from '@/components/MapInteractionTracker';
+import { RestaurantMarker } from '@/components/map/RestaurantMarker';
+import { UserLocationMarker } from '@/components/map/UserLocationMarker';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserLocation } from '@/hooks/useUserLocation';
+import { Map as MapIcon } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { getDeviceType } from '@/utils/analytics';
+import type { LngLatBoundsLike } from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+
+interface Restaurant {
+  id: number;
+  restaurant_name: string;
+  street_address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  slug?: string | null;
+  logo_url?: string | null;
+  neighborhood?: string | null;
+  merchant_happy_hour?: any[];
+  happy_hour_deals?: any[];
+  merchant_categories?: any[];
+}
+
+interface ResultsMapProps {
+  restaurants?: Restaurant[];
+  onMapMove?: (bounds: { north: number; south: number; east: number; west: number }) => void;
+  showSearchThisArea?: boolean;
+  onSearchThisArea?: () => void;
+  isUsingMapSearch?: boolean;
+  viewState?: { longitude: number; latitude: number; zoom: number };
+  onViewStateChange?: (viewState: { longitude: number; latitude: number; zoom: number }) => void;
+  isMobile?: boolean;
+  hoveredRestaurantId?: number | null;
+  searchLocation?: string;
+  isLoading?: boolean;
+  skipAutoFit?: boolean;
+}
+
+const ResultsMapComponent: React.FC<ResultsMapProps> = ({ 
+  restaurants = [], 
+  onMapMove,
+  showSearchThisArea = false,
+  onSearchThisArea,
+  isUsingMapSearch = false,
+  viewState: externalViewState,
+  onViewStateChange,
+  isMobile: mobileOverride,
+  hoveredRestaurantId,
+  searchLocation,
+  skipAutoFit = false,
+}) => {
+  const [viewState, setViewState] = useState(externalViewState || {
+    longitude: -73.9712,
+    latitude: 40.7831,
+    zoom: 12
+  });
+
+  const [hoveredRestaurant, setHoveredRestaurant] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  const mapRef = useRef<any>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigate = useNavigate();
+  const isMobile = mobileOverride ?? useIsMobile();
+  const { userLocation } = useUserLocation();
+  const { track, trackFunnel } = useAnalytics();
+
+  // Create a stable reference for tracking when result set changes
+  const restaurantIds = useMemo(() => 
+    restaurants
+      .filter(r => r.latitude && r.longitude)
+      .map(r => r.id)
+      .sort((a, b) => a - b)
+      .join(','),
+    [restaurants]
+  );
+
+  // Viewport-based marker filtering: only render markers within visible bounds + 20% buffer
+  // This cuts ~600 mounted React components down to ~30-80 for dense cities like NYC
+  const visibleRestaurants = useMemo(() => {
+    const restaurantsWithCoords = restaurants.filter(r => r.latitude && r.longitude);
+    
+    // Estimate visible bounds from viewState using zoom-level math
+    // At zoom 0, the world is ~360° wide. Each zoom level halves the visible area.
+    const zoomFactor = Math.pow(2, viewState.zoom);
+    const lngSpan = 360 / zoomFactor;
+    const latSpan = 180 / zoomFactor;
+    
+    // Add 20% buffer so markers don't pop in/out at the edge
+    const buffer = 0.2;
+    const halfLng = (lngSpan / 2) * (1 + buffer);
+    const halfLat = (latSpan / 2) * (1 + buffer);
+    
+    const bounds = {
+      north: viewState.latitude + halfLat,
+      south: viewState.latitude - halfLat,
+      east: viewState.longitude + halfLng,
+      west: viewState.longitude - halfLng,
+    };
+    
+    return restaurantsWithCoords.filter(r => 
+      r.latitude! >= bounds.south &&
+      r.latitude! <= bounds.north &&
+      r.longitude! >= bounds.west &&
+      r.longitude! <= bounds.east
+    );
+  }, [restaurants, viewState.latitude, viewState.longitude, viewState.zoom]);
+
+  // Handle restaurant marker click
+  const handleRestaurantClick = useCallback(async (restaurant: Restaurant) => {
+    await track({
+      eventType: 'click',
+      eventCategory: 'map_interaction',
+      eventAction: 'map_marker_clicked',
+      merchantId: restaurant.id,
+      metadata: {
+        deviceType: getDeviceType(),
+        merchantName: restaurant.restaurant_name,
+      },
+    });
+    
+    await trackFunnel({
+      funnelStep: 'merchant_clicked',
+      merchantId: restaurant.id,
+      stepOrder: 4
+    });
+
+    if (isMobile) {
+      // On mobile, show preview card at bottom instead of navigating
+      setSelectedRestaurant(restaurant);
+    } else {
+      // On desktop, navigate directly - prefer slug for SEO
+      navigate(`/restaurant/${restaurant.slug || restaurant.id}`);
+    }
+  }, [navigate, isMobile, track, trackFunnel]);
+
+  // Handle marker hover (desktop only)
+  const handleMarkerHover = useCallback((restaurant: Restaurant, event: React.MouseEvent) => {
+    if (isMobile) return;
+    
+    // Cancel any pending hide timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    
+    const mapContainer = event.currentTarget.closest('.map-container');
+    if (mapContainer) {
+      const rect = mapContainer.getBoundingClientRect();
+      setMousePosition({ 
+        x: event.clientX - rect.left, 
+        y: event.clientY - rect.top 
+      });
+    }
+    setHoveredRestaurant(restaurant);
+  }, [isMobile]);
+
+  // Handle marker leave (desktop only) - debounced to prevent flicker
+  const handleMarkerLeave = useCallback(() => {
+    if (isMobile) return;
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredRestaurant(null);
+    }, 150);
+  }, [isMobile]);
+
+  // Keep preview card visible when mouse enters it
+  const handlePreviewCardEnter = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Start hide timeout when mouse leaves preview card
+  const handlePreviewCardLeave = useCallback(() => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredRestaurant(null);
+    }, 150);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Update map to fit all restaurant markers (only when not manually searching)
+  useEffect(() => {
+    // Skip automatic centering/zooming if user is using manual map search
+    if (isUsingMapSearch) return;
+    
+    // Skip auto-fit when restoring a saved map position (e.g. back navigation)
+    if (skipAutoFit) return;
+    
+    // Wait for map to be loaded
+    if (!mapLoaded || !mapRef.current) return;
+    
+    const restaurantsWithCoords = restaurants.filter(
+      restaurant => restaurant.latitude && restaurant.longitude
+    );
+
+    if (restaurantsWithCoords.length === 0) return;
+
+    // If only one restaurant, center on it with a reasonable zoom
+    if (restaurantsWithCoords.length === 1) {
+      const newViewState = {
+        longitude: restaurantsWithCoords[0].longitude!,
+        latitude: restaurantsWithCoords[0].latitude!,
+        zoom: 15
+      };
+      setViewState(newViewState);
+      onViewStateChange?.(newViewState);
+      return;
+    }
+
+    // Calculate bounding box of all restaurants
+    const lats = restaurantsWithCoords.map(r => r.latitude!);
+    const lngs = restaurantsWithCoords.map(r => r.longitude!);
+    
+    const bounds: LngLatBoundsLike = [
+      [Math.min(...lngs), Math.min(...lats)], // Southwest corner [lng, lat]
+      [Math.max(...lngs), Math.max(...lats)]  // Northeast corner [lng, lat]
+    ];
+
+    // Use fitBounds to show all markers
+    const map = mapRef.current.getMap();
+    map.fitBounds(bounds, {
+      padding: { top: 50, bottom: 50, left: 50, right: 50 },
+      maxZoom: 15, // Don't zoom in too close
+      duration: 500 // Smooth animation
+    });
+
+    // Sync view state after fitBounds completes
+    map.once('moveend', () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      const newViewState = {
+        longitude: center.lng,
+        latitude: center.lat,
+        zoom: zoom
+      };
+      setViewState(newViewState);
+      onViewStateChange?.(newViewState);
+    });
+  }, [restaurantIds, isUsingMapSearch, mapLoaded]);
+
+  // Sync with external viewState when it changes
+  useEffect(() => {
+    if (externalViewState) {
+      setViewState(externalViewState);
+    }
+  }, [externalViewState]);
+
+  // Handle map move events to update search results
+  // Analytics removed - handled by MapInteractionTracker with throttling/sampling
+  const handleMoveEnd = useCallback(() => {
+    if (mapRef.current && onMapMove) {
+      const map = mapRef.current.getMap();
+      const bounds = map.getBounds();
+      
+      onMapMove({
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest()
+      });
+    }
+  }, [onMapMove]);
+
+  // Mobile full-screen map
+  if (isMobile) {
+    return (
+      <div className="map-container h-full w-full relative">
+        <Map
+          ref={mapRef}
+          {...viewState}
+          onLoad={() => setMapLoaded(true)}
+          onMove={evt => {
+            const newViewState = evt.viewState;
+            setViewState(newViewState);
+            // Notify parent of view state change
+            onViewStateChange?.(newViewState);
+          }}
+          onMoveEnd={handleMoveEnd}
+          style={{ width: '100%', height: '100%' }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+        >
+          {/* Map Interaction Tracker */}
+          <MapInteractionTracker mapRef={mapRef} />
+          
+          {/* No Navigation Controls on Mobile */}
+          
+          {/* User Location Marker */}
+          {userLocation && (
+            <UserLocationMarker
+              longitude={userLocation.longitude}
+              latitude={userLocation.latitude}
+            />
+          )}
+          
+          {/* Restaurant Markers - Viewport-filtered for performance */}
+          {visibleRestaurants.map((restaurant) => (
+              <RestaurantMarker
+                key={restaurant.id}
+                restaurant={{
+                  id: restaurant.id,
+                  restaurant_name: restaurant.restaurant_name,
+                  longitude: restaurant.longitude!,
+                  latitude: restaurant.latitude!,
+                }}
+                isHovered={false}
+                isSelected={selectedRestaurant?.id === restaurant.id}
+                isMobile={true}
+                onClick={() => handleRestaurantClick(restaurant)}
+              />
+            ))}
+        </Map>
+        
+        {/* Merchant Preview Card for mobile */}
+        <MerchantMapPreviewCard
+          restaurant={selectedRestaurant}
+          position={mousePosition}
+          isVisible={!!selectedRestaurant}
+          isMobile={isMobile}
+          onNavigate={() => {
+            if (selectedRestaurant) {
+              navigate(`/restaurant/${selectedRestaurant.slug || selectedRestaurant.id}`);
+            }
+          }}
+          onClose={() => setSelectedRestaurant(null)}
+        />
+      </div>
+    );
+  }
+
+  // Desktop/tablet map with card wrapper
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold">Map View</CardTitle>
+          {showSearchThisArea && onSearchThisArea && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onSearchThisArea}
+              className="flex items-center gap-2"
+            >
+              <MapIcon className="h-4 w-4" />
+              Search this area
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 pt-0 relative flex-1 flex flex-col">
+        <div className="map-container rounded-lg overflow-hidden h-[75vh] max-h-[900px] relative">
+          <Map
+            ref={mapRef}
+            {...viewState}
+            onLoad={() => setMapLoaded(true)}
+            onMove={evt => {
+              const newViewState = evt.viewState;
+              setViewState(newViewState);
+              // Notify parent of view state change
+              onViewStateChange?.(newViewState);
+            }}
+            onMoveEnd={handleMoveEnd}
+            style={{ width: '100%', height: '100%' }}
+            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapboxAccessToken="pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw"
+          >
+            {/* Navigation Controls */}
+            <NavigationControl position="top-right" />
+            
+            {/* Map Interaction Tracker */}
+            <MapInteractionTracker mapRef={mapRef} />
+            
+            {/* User Location Marker */}
+            {userLocation && (
+              <UserLocationMarker
+                longitude={userLocation.longitude}
+                latitude={userLocation.latitude}
+              />
+            )}
+            
+            {/* Restaurant Markers - Viewport-filtered for performance */}
+            {visibleRestaurants.map((restaurant) => (
+                <RestaurantMarker
+                  key={restaurant.id}
+                  restaurant={{
+                    id: restaurant.id,
+                    restaurant_name: restaurant.restaurant_name,
+                    longitude: restaurant.longitude!,
+                    latitude: restaurant.latitude!,
+                  }}
+                  isHovered={hoveredRestaurantId === restaurant.id}
+                  isSelected={selectedRestaurant?.id === restaurant.id}
+                  isMobile={false}
+                  onClick={() => handleRestaurantClick(restaurant)}
+                  onMouseEnter={(event) => handleMarkerHover(restaurant, event)}
+                  onMouseLeave={handleMarkerLeave}
+                />
+              ))}
+          </Map>
+        </div>
+        
+        {/* Merchant Preview Card - positioned outside map container to avoid clipping */}
+        <MerchantMapPreviewCard
+          restaurant={hoveredRestaurant}
+          position={mousePosition}
+          isVisible={!!hoveredRestaurant}
+          isMobile={isMobile}
+          onNavigate={() => {
+            if (hoveredRestaurant) {
+              navigate(`/restaurant/${hoveredRestaurant.slug || hoveredRestaurant.id}`);
+            }
+          }}
+          onClose={() => setSelectedRestaurant(null)}
+          onMouseEnter={handlePreviewCardEnter}
+          onMouseLeave={handlePreviewCardLeave}
+        />
+        
+        {/* Show info about restaurants without coordinates */}
+        {restaurants.length > 0 && (
+          <div className="mt-2 text-xs text-gray-500">
+            Showing {restaurants.filter(r => r.latitude && r.longitude).length} of {restaurants.length} restaurants on map
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Memoize to prevent unnecessary re-renders
+// Only compare data props that affect visual output - callback comparisons removed
+// since they're now stable with useCallback in Results.tsx
+export const ResultsMap = React.memo(ResultsMapComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.restaurants === nextProps.restaurants &&
+    prevProps.showSearchThisArea === nextProps.showSearchThisArea &&
+    prevProps.isUsingMapSearch === nextProps.isUsingMapSearch &&
+    prevProps.viewState === nextProps.viewState &&
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.hoveredRestaurantId === nextProps.hoveredRestaurantId &&
+    prevProps.searchLocation === nextProps.searchLocation &&
+    prevProps.isLoading === nextProps.isLoading
+  );
+});

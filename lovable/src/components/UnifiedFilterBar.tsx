@@ -1,0 +1,646 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown, ChevronRight, Clock, CalendarDays } from 'lucide-react';
+import { useCategoriesHierarchy, type CategoryType } from '@/hooks/useCategories';
+import { useCategoriesWithMerchants } from '@/hooks/useCategoriesWithMerchants';
+import { RadiusOption, getSmartDefaultRadius } from './RadiusFilter';
+import { TimeDropdown } from './TimeDropdown';
+import { NeighborhoodFilter } from './NeighborhoodFilter';
+import { useAnalytics } from '@/hooks/useAnalytics';
+
+interface UnifiedFilterBarProps {
+  selectedCategories: string[];
+  onCategoryChange: (categories: string[]) => void;
+  selectedRadius: RadiusOption;
+  onRadiusChange: (radius: RadiusOption) => void;
+  isRadiusEnabled: boolean;
+  useGPS?: boolean;
+  showOffersOnly: boolean;
+  onShowOffersChange: (showOffers: boolean) => void;
+  selectedDays: number[];
+  onDaysChange: (days: number[]) => void;
+  startTime: string;
+  endTime: string;
+  onStartTimeChange: (time: string) => void;
+  onEndTimeChange: (time: string) => void;
+  selectedMenuType: 'all' | 'food_and_drinks' | 'drinks_only';
+  onMenuTypeChange: (menuType: 'all' | 'food_and_drinks' | 'drinks_only') => void;
+  vertical?: boolean;
+  happeningNow?: boolean;
+  onHappeningNowChange?: (value: boolean) => void;
+  happeningToday?: boolean;
+  onHappeningTodayChange?: (value: boolean) => void;
+  locationType?: string | null;
+  onClearAllFilters?: () => void;
+  neighborhoods?: { name: string; count: number }[];
+  selectedNeighborhood?: string | null;
+  onNeighborhoodChange?: (value: string | null) => void;
+  isNeighborhoodPage?: boolean;
+}
+
+const BASE_RADIUS_OPTIONS: { value: RadiusOption; label: string; disabled?: boolean }[] = [
+  { value: 'blocks', label: 'Nearby (within .25 miles)' },
+  { value: 'walking', label: 'Walking (within 1 mile)' },
+  { value: 'bike', label: 'Bike (within 3 miles)' },
+  { value: 'drive', label: 'Drive (within 5 miles)' },
+  { value: 'city', label: 'City-wide (within 25 miles)' },
+];
+
+const DAYS_OF_WEEK = [
+  { label: 'Mon', value: 0 },
+  { label: 'Tue', value: 1 },
+  { label: 'Wed', value: 2 },
+  { label: 'Thu', value: 3 },
+  { label: 'Fri', value: 4 },
+  { label: 'Sat', value: 5 },
+  { label: 'Sun', value: 6 }
+];
+
+export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
+  selectedCategories,
+  onCategoryChange,
+  selectedRadius,
+  onRadiusChange,
+  isRadiusEnabled,
+  useGPS = false,
+  showOffersOnly,
+  onShowOffersChange,
+  selectedDays,
+  onDaysChange,
+  startTime,
+  endTime,
+  onStartTimeChange,
+  onEndTimeChange,
+  selectedMenuType,
+  onMenuTypeChange,
+  vertical = false,
+  happeningNow = false,
+  onHappeningNowChange,
+  happeningToday = false,
+  onHappeningTodayChange,
+  locationType = null,
+  onClearAllFilters,
+  neighborhoods,
+  selectedNeighborhood,
+  onNeighborhoodChange,
+  isNeighborhoodPage = false,
+}) => {
+  const smartDefault = getSmartDefaultRadius(locationType, useGPS, isNeighborhoodPage);
+  
+  // Build radius options: on neighborhood pages, replace "Nearby" with "Within neighborhood"
+  const RADIUS_OPTIONS = React.useMemo(() => {
+    if (isNeighborhoodPage) {
+      return [
+        { value: 'neighborhood' as RadiusOption, label: 'Within neighborhood' },
+        ...BASE_RADIUS_OPTIONS.filter(o => o.value !== 'blocks'),
+      ];
+    }
+    return BASE_RADIUS_OPTIONS;
+  }, [isNeighborhoodPage]);
+  const { categories, getSubCategories, getCategoryDimensions, isLoading } = useCategoriesHierarchy();
+  const { data: activeCategoryIds } = useCategoriesWithMerchants();
+  const { track } = useAnalytics();
+  const [expandedSections, setExpandedSections] = useState<string[]>(['venue_type']);
+  const [isDistanceExpanded, setIsDistanceExpanded] = useState(false);
+  const [isDaysExpanded, setIsDaysExpanded] = useState(false);
+  const [isTimeExpanded, setIsTimeExpanded] = useState(false);
+  const [isMenuTypeExpanded, setIsMenuTypeExpanded] = useState(false);
+
+  const toggleCategory = (categoryId: string) => {
+    const isSelected = selectedCategories.includes(categoryId);
+    
+    // Track immediately (not debounced for better UX feedback)
+    track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: isSelected ? 'category_deselected' : 'category_selected',
+      eventLabel: categoryId,
+      metadata: {
+        totalCategoriesSelected: isSelected 
+          ? selectedCategories.length - 1 
+          : selectedCategories.length + 1
+      },
+    });
+
+    const newSelected = selectedCategories.includes(categoryId)
+      ? selectedCategories.filter(id => id !== categoryId)
+      : [...selectedCategories, categoryId];
+    
+    onCategoryChange(newSelected);
+  };
+
+  const toggleSectionExpanded = (sectionKey: string) => {
+    setExpandedSections(prev =>
+      prev.includes(sectionKey)
+        ? prev.filter(k => k !== sectionKey)
+        : [...prev, sectionKey]
+    );
+  };
+
+  const toggleDay = (dayValue: number) => {
+    const isSelected = selectedDays.includes(dayValue);
+    
+    // Auto-off happeningNow/happeningToday when manually selecting days
+    if (happeningNow && onHappeningNowChange) {
+      onHappeningNowChange(false);
+    }
+    if (happeningToday && onHappeningTodayChange) {
+      onHappeningTodayChange(false);
+    }
+
+    // Track immediately (not debounced for better UX feedback)
+    track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'day_filter_toggled',
+      eventLabel: DAYS_OF_WEEK[dayValue].label,
+      metadata: {
+        isSelected: !isSelected,
+        totalDaysSelected: isSelected 
+          ? selectedDays.length - 1 
+          : selectedDays.length + 1
+      },
+    });
+
+    const newSelected = selectedDays.includes(dayValue) 
+      ? selectedDays.filter(day => day !== dayValue)
+      : [...selectedDays, dayValue];
+    onDaysChange(newSelected);
+  };
+
+  const handleRadiusChange = (radius: RadiusOption) => {
+    track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'radius_changed',
+      eventLabel: radius,
+      metadata: {
+        previousRadius: selectedRadius
+      },
+    });
+    onRadiusChange(radius);
+  };
+
+  const handleStartTimeChange = (time: string) => {
+    // Auto-off happeningNow/happeningToday when manually selecting time
+    if (happeningNow && onHappeningNowChange) {
+      onHappeningNowChange(false);
+    }
+    if (happeningToday && onHappeningTodayChange) {
+      onHappeningTodayChange(false);
+    }
+    track({
+      eventType: 'change',
+      eventCategory: 'filter',
+      eventAction: 'start_time_changed',
+      eventLabel: time,
+      metadata: {
+        endTime: endTime
+      },
+    });
+    onStartTimeChange(time);
+  };
+
+  const handleEndTimeChange = (time: string) => {
+    // Auto-off happeningNow/happeningToday when manually selecting time
+    if (happeningNow && onHappeningNowChange) {
+      onHappeningNowChange(false);
+    }
+    if (happeningToday && onHappeningTodayChange) {
+      onHappeningTodayChange(false);
+    }
+    track({
+      eventType: 'change',
+      eventCategory: 'filter',
+      eventAction: 'end_time_changed',
+      eventLabel: time,
+      metadata: {
+        startTime: startTime
+      },
+    });
+    onEndTimeChange(time);
+  };
+
+  const clearAllFilters = () => {
+    track({
+      eventType: 'click',
+      eventCategory: 'filter',
+      eventAction: 'clear_all_filters',
+      metadata: {
+        previousFilters: {
+          categories: selectedCategories.length,
+          days: selectedDays.length,
+          hasTimeFilter: !!startTime || !!endTime,
+          radius: selectedRadius,
+          menuType: selectedMenuType
+        }
+      },
+    });
+
+    if (onClearAllFilters) {
+      onClearAllFilters();
+    } else {
+      onCategoryChange([]);
+      onRadiusChange(smartDefault);
+      onShowOffersChange(false);
+      onDaysChange([]);
+      onStartTimeChange('');
+      onEndTimeChange('');
+      onMenuTypeChange('all');
+      if (onHappeningNowChange) onHappeningNowChange(false);
+      if (onHappeningTodayChange) onHappeningTodayChange(false);
+      if (onNeighborhoodChange) onNeighborhoodChange(null);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Loading filters...</div>;
+  }
+
+  const dimensions = getCategoryDimensions();
+  const allCats = categories || [];
+  const hasAnyFilters = selectedCategories.length > 0 || selectedRadius !== smartDefault || showOffersOnly || selectedDays.length > 0 || startTime || endTime || selectedMenuType !== 'all' || happeningNow || happeningToday || !!selectedNeighborhood;
+
+  return (
+    <Card className="h-fit">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold">Filters</CardTitle>
+          {hasAnyFilters && (
+            <Button variant="outline" size="sm" onClick={clearAllFilters}>
+              Clear All
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Happening Now / Happening Today toggles */}
+          {(onHappeningNowChange || onHappeningTodayChange) && (
+            <div className="grid grid-cols-2 gap-2">
+              {onHappeningNowChange && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newValue = !happeningNow;
+                    onHappeningNowChange(newValue);
+                    track({
+                      eventType: 'click',
+                      eventCategory: 'filter',
+                      eventAction: newValue ? 'happening_now_enabled' : 'happening_now_disabled',
+                    });
+                  }}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    happeningNow
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
+                      : 'border-2 border-muted text-muted-foreground hover:border-orange-400 hover:text-orange-600'
+                  }`}
+                >
+                  <Clock className="h-4 w-4" />
+                  <span>Happening Now</span>
+                  {happeningNow && (
+                    <span className="relative flex h-2.5 w-2.5 ml-0.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400" />
+                    </span>
+                  )}
+                </button>
+              )}
+              {onHappeningTodayChange && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newValue = !happeningToday;
+                    onHappeningTodayChange(newValue);
+                    track({
+                      eventType: 'click',
+                      eventCategory: 'filter',
+                      eventAction: newValue ? 'happening_today_enabled' : 'happening_today_disabled',
+                    });
+                  }}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    happeningToday
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                      : 'border-2 border-muted text-muted-foreground hover:border-blue-400 hover:text-blue-600'
+                  }`}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span>Happening Today</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Show offers only toggle - Hidden for now */}
+          <div className="hidden flex items-center justify-between">
+            <Label htmlFor="offers-toggle" className="text-sm font-medium">
+              Show offers only
+            </Label>
+            <Switch
+              id="offers-toggle"
+              checked={showOffersOnly}
+              onCheckedChange={onShowOffersChange}
+            />
+          </div>
+
+          {/* Neighborhood filter (only on location landing pages) */}
+          {neighborhoods && neighborhoods.length > 0 && onNeighborhoodChange && (
+            <NeighborhoodFilter
+              neighborhoods={neighborhoods}
+              selected={selectedNeighborhood ?? null}
+              onChange={onNeighborhoodChange}
+            />
+          )}
+
+          {/* Selected categories badges */}
+          {selectedCategories.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {selectedCategories.map(categoryId => {
+                const category = allCats.find(c => c.id === categoryId);
+                return category ? (
+                  <Badge key={categoryId} variant="secondary" className="cursor-pointer" 
+                    onClick={() => toggleCategory(categoryId)}>
+                    {category.name} ×
+                  </Badge>
+                ) : null;
+              })}
+            </div>
+          )}
+
+          {/* Category dimensions */}
+          {dimensions.map(dim => {
+            if (dim.parents.length === 0 && dim.children.length === 0) return null;
+            const isExpanded = expandedSections.includes(dim.type);
+            
+            return (
+              <div key={dim.type} className="space-y-3">
+                <div className="border rounded-lg p-2 bg-white">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium text-sm">{dim.label}</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleSectionExpanded(dim.type)}
+                      className="h-5 w-5 p-0"
+                    >
+                      {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    </Button>
+                  </div>
+
+                  <Collapsible open={isExpanded}>
+                    <CollapsibleContent className="space-y-1">
+                      {dim.parents.map(parent => {
+                        const subs = getSubCategories(parent.id);
+                        // Filter subs to only those with active merchants
+                        const visibleSubs = activeCategoryIds
+                          ? subs.filter(s => activeCategoryIds.includes(s.id))
+                          : subs;
+                        const hasSubs = visibleSubs.length > 0;
+                        const parentHasMerchants = !activeCategoryIds || activeCategoryIds.includes(parent.id);
+
+                        // Hide parent if it has no merchants and no visible children
+                        if (!parentHasMerchants && !hasSubs) return null;
+
+                        if (!hasSubs) {
+                          // Standalone parent (e.g. Cafe)
+                          return (
+                            <label key={parent.id} className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(parent.id)}
+                                onChange={() => toggleCategory(parent.id)}
+                                className="rounded"
+                              />
+                              <span className="text-xs font-medium">{parent.name}</span>
+                            </label>
+                          );
+                        }
+
+                        // Parent with children (e.g. Bar → Cocktail Bar, etc.)
+                        return (
+                          <div key={parent.id} className="mb-1">
+                            <label className="flex items-center space-x-2 cursor-pointer mb-1">
+                              <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(parent.id)}
+                                onChange={() => toggleCategory(parent.id)}
+                                className="rounded"
+                              />
+                              <span className="text-xs font-semibold">{parent.name}</span>
+                            </label>
+                            <div className="pl-4 space-y-1">
+                              {visibleSubs.map(sub => (
+                                <label key={sub.id} className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCategories.includes(sub.id)}
+                                    onChange={() => toggleCategory(sub.id)}
+                                    className="rounded"
+                                  />
+                                  <span className="text-xs">{sub.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Time filters */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">Happy hour time</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsTimeExpanded(!isTimeExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isTimeExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isTimeExpanded}>
+                <CollapsibleContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-700">Start Time</label>
+                      <TimeDropdown
+                        placeholder="Start"
+                        value={startTime}
+                        onChange={handleStartTimeChange}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-700">End Time</label>
+                      <TimeDropdown
+                        placeholder="End"
+                        value={endTime}
+                        onChange={handleEndTimeChange}
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </div>
+
+          {/* Days of the week filter */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">Days of the week</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsDaysExpanded(!isDaysExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isDaysExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isDaysExpanded}>
+                <CollapsibleContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleDay(day.value)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                          selectedDays.includes(day.value)
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+            </div>
+
+          {/* Menu Type filter */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">Menu Type</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMenuTypeExpanded(!isMenuTypeExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isMenuTypeExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isMenuTypeExpanded}>
+                <CollapsibleContent className="space-y-2">
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="menuType"
+                        value="all"
+                        checked={selectedMenuType === 'all'}
+                        onChange={() => onMenuTypeChange('all')}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs">All Menus</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="menuType"
+                        value="food_and_drinks"
+                        checked={selectedMenuType === 'food_and_drinks'}
+                        onChange={() => onMenuTypeChange('food_and_drinks')}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs">🍽️ Food & Drinks</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="menuType"
+                        value="drinks_only"
+                        checked={selectedMenuType === 'drinks_only'}
+                        onChange={() => onMenuTypeChange('drinks_only')}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs">🥃 Drinks Only</span>
+                    </label>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </div>
+
+          {/* Distance filter */}
+          <div className="space-y-3">
+            <div className="border rounded-lg p-2 bg-white">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm">
+                  {selectedNeighborhood ? `Distance from ${selectedNeighborhood}` : 'Distance'}
+                </h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsDistanceExpanded(!isDistanceExpanded)}
+                  className="h-5 w-5 p-0"
+                >
+                  {isDistanceExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </Button>
+              </div>
+
+              <Collapsible open={isDistanceExpanded}>
+                <CollapsibleContent className="space-y-2">
+                  {!isRadiusEnabled && (
+                    <p className="text-xs text-gray-500 mb-2">
+                      Distance filtering requires a location to be specified in your search.
+                    </p>
+                  )}
+                  
+                  <div className="space-y-2">
+                    {RADIUS_OPTIONS.map((option) => (
+                      <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="radius"
+                          value={option.value}
+                          checked={selectedRadius === option.value}
+                          onChange={() => handleRadiusChange(option.value)}
+                          disabled={!isRadiusEnabled}
+                          className="rounded-full"
+                        />
+                        <span className={`text-xs ${!isRadiusEnabled ? 'text-gray-400' : ''}`}>
+                          {option.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

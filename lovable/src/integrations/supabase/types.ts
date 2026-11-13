@@ -1,0 +1,1750 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
+  public: {
+    Tables: {
+      business: {
+        Row: {
+          business_name: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      carousel_merchants: {
+        Row: {
+          added_at: string
+          carousel_id: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          merchant_id: number
+          removed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          carousel_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          merchant_id: number
+          removed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          carousel_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          merchant_id?: number
+          removed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carousel_merchants_carousel_id_fkey"
+            columns: ["carousel_id"]
+            isOneToOne: false
+            referencedRelation: "homepage_carousels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carousel_merchants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carousel_merchants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          category_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      donations: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          donor_email: string | null
+          donor_name: string | null
+          id: string
+          message: string | null
+          session_id: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          donor_email?: string | null
+          donor_name?: string | null
+          id?: string
+          message?: string | null
+          session_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          donor_email?: string | null
+          donor_name?: string | null
+          id?: string
+          message?: string | null
+          session_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funnel_events: {
+        Row: {
+          completed_at: string
+          created_at: string
+          funnel_step: string
+          id: string
+          merchant_id: number | null
+          session_id: string
+          step_order: number
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          funnel_step: string
+          id?: string
+          merchant_id?: number | null
+          session_id: string
+          step_order: number
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          funnel_step?: string
+          id?: string
+          merchant_id?: number | null
+          session_id?: string
+          step_order?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      happy_hour_deals: {
+        Row: {
+          active: boolean
+          created_at: string
+          deal_description: string | null
+          deal_title: string
+          display_order: number | null
+          id: string
+          is_verified: boolean
+          menu_type: string | null
+          restaurant_id: number
+          source_label: string | null
+          source_url: string | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          deal_description?: string | null
+          deal_title: string
+          display_order?: number | null
+          id?: string
+          is_verified?: boolean
+          menu_type?: string | null
+          restaurant_id: number
+          source_label?: string | null
+          source_url?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          deal_description?: string | null
+          deal_title?: string
+          display_order?: number | null
+          id?: string
+          is_verified?: boolean
+          menu_type?: string | null
+          restaurant_id?: number
+          source_label?: string | null
+          source_url?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "happy_hour_deals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "happy_hour_deals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "happy_hour_deals_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "happy_hour_deals_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homepage_carousels: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      location_cache: {
+        Row: {
+          canonical_city: string
+          canonical_state: string
+          created_at: string
+          east_lng: number | null
+          id: string
+          latitude: number
+          location_type: string | null
+          longitude: number
+          neighborhood_name: string | null
+          north_lat: number | null
+          original_input: string
+          south_lat: number | null
+          west_lng: number | null
+        }
+        Insert: {
+          canonical_city: string
+          canonical_state: string
+          created_at?: string
+          east_lng?: number | null
+          id?: string
+          latitude: number
+          location_type?: string | null
+          longitude: number
+          neighborhood_name?: string | null
+          north_lat?: number | null
+          original_input: string
+          south_lat?: number | null
+          west_lng?: number | null
+        }
+        Update: {
+          canonical_city?: string
+          canonical_state?: string
+          created_at?: string
+          east_lng?: number | null
+          id?: string
+          latitude?: number
+          location_type?: string | null
+          longitude?: number
+          neighborhood_name?: string | null
+          north_lat?: number | null
+          original_input?: string
+          south_lat?: number | null
+          west_lng?: number | null
+        }
+        Relationships: []
+      }
+      Merchant: {
+        Row: {
+          business_id: string | null
+          city: string
+          created_at: string
+          geocoded_at: string | null
+          id: number
+          is_active: boolean
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          neighborhood: string | null
+          phone_number: string | null
+          restaurant_name: string
+          slug: string | null
+          state: string
+          street_address: string
+          street_address_line_2: string | null
+          updated_at: string
+          verification_is_verified: boolean
+          verification_source_label: string | null
+          verification_source_url: string | null
+          verification_verified_at: string | null
+          verification_verified_by: string | null
+          website: string | null
+          zip_code: string
+        }
+        Insert: {
+          business_id?: string | null
+          city: string
+          created_at?: string
+          geocoded_at?: string | null
+          id?: number
+          is_active?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          neighborhood?: string | null
+          phone_number?: string | null
+          restaurant_name: string
+          slug?: string | null
+          state: string
+          street_address: string
+          street_address_line_2?: string | null
+          updated_at?: string
+          verification_is_verified?: boolean
+          verification_source_label?: string | null
+          verification_source_url?: string | null
+          verification_verified_at?: string | null
+          verification_verified_by?: string | null
+          website?: string | null
+          zip_code: string
+        }
+        Update: {
+          business_id?: string | null
+          city?: string
+          created_at?: string
+          geocoded_at?: string | null
+          id?: number
+          is_active?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          neighborhood?: string | null
+          phone_number?: string | null
+          restaurant_name?: string
+          slug?: string | null
+          state?: string
+          street_address?: string
+          street_address_line_2?: string | null
+          updated_at?: string
+          verification_is_verified?: boolean
+          verification_source_label?: string | null
+          verification_source_url?: string | null
+          verification_verified_at?: string | null
+          verification_verified_by?: string | null
+          website?: string | null
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Merchant_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_verification_verified_by_fkey"
+            columns: ["verification_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_verification_verified_by_fkey"
+            columns: ["verification_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          id: string
+          merchant_id: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          id?: string
+          merchant_id: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          merchant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_categories_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_categories_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_events: {
+        Row: {
+          category_tags: string[] | null
+          city: string | null
+          created_at: string
+          description: string | null
+          end_time: string | null
+          event_date: string | null
+          event_type: string
+          id: number
+          image_url: string | null
+          is_active: boolean
+          neighborhood: string | null
+          recurrence_day: number | null
+          recurrence_rule: string | null
+          repeat_until: string | null
+          restaurant_id: number
+          start_time: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_tags?: string[] | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string | null
+          event_type?: string
+          id?: number
+          image_url?: string | null
+          is_active?: boolean
+          neighborhood?: string | null
+          recurrence_day?: number | null
+          recurrence_rule?: string | null
+          repeat_until?: string | null
+          restaurant_id: number
+          start_time?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_tags?: string[] | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string | null
+          event_type?: string
+          id?: number
+          image_url?: string | null
+          is_active?: boolean
+          neighborhood?: string | null
+          recurrence_day?: number | null
+          recurrence_rule?: string | null
+          repeat_until?: string | null
+          restaurant_id?: number
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_google_ratings: {
+        Row: {
+          created_at: string
+          fetched_at: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_rating_url: string | null
+          google_review_count: number | null
+          id: string
+          match_confidence: string | null
+          merchant_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fetched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_rating_url?: string | null
+          google_review_count?: number | null
+          id?: string
+          match_confidence?: string | null
+          merchant_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fetched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_rating_url?: string | null
+          google_review_count?: number | null
+          id?: string
+          match_confidence?: string | null
+          merchant_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_google_ratings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_google_ratings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_happy_hour: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          happy_hour_end: string
+          happy_hour_start: string
+          id: string
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          happy_hour_end: string
+          happy_hour_start: string
+          id?: string
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          happy_hour_end?: string
+          happy_hour_start?: string
+          id?: string
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_happy_hour_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_listing_issue: {
+        Row: {
+          additional_feedback: string | null
+          created_at: string
+          id: string
+          issue_types: string[]
+          merchant_id: number
+          reporter_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          additional_feedback?: string | null
+          created_at?: string
+          id?: string
+          issue_types: string[]
+          merchant_id: number
+          reporter_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          additional_feedback?: string | null
+          created_at?: string
+          id?: string
+          issue_types?: string[]
+          merchant_id?: number
+          reporter_email?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_listing_issue_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_listing_issue_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_offers: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_active: boolean
+          offer_description: string | null
+          offer_name: string
+          redemption_pin: string | null
+          start_time: string
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          offer_description?: string | null
+          offer_name: string
+          redemption_pin?: string | null
+          start_time: string
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          offer_description?: string | null
+          offer_name?: string
+          redemption_pin?: string | null
+          start_time?: string
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_owners: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_owners_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_owners_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_review_media: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          media_type: string
+          review_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          media_type: string
+          review_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          media_type?: string
+          review_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_review_media_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_review_ratings: {
+        Row: {
+          created_at: string
+          dimension: string
+          id: string
+          rating: number
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          dimension: string
+          id?: string
+          rating: number
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          dimension?: string
+          id?: string
+          rating?: number
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_review_ratings_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: number
+          published_at: string | null
+          review_text: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: number
+          published_at?: string | null
+          review_text: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: number
+          published_at?: string | null
+          review_text?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_reviews_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_reviews_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_store_hours: {
+        Row: {
+          close_time: string
+          created_at: string
+          day_of_week: number
+          id: string
+          is_closed: boolean
+          open_time: string
+          store_id: number
+          updated_at: string
+        }
+        Insert: {
+          close_time: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_closed?: boolean
+          open_time: string
+          store_id: number
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_closed?: boolean
+          open_time?: string
+          store_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_store_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_store_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_redemptions: {
+        Row: {
+          id: string
+          offer_id: string
+          redeemed_at: string
+          session_id: string | null
+          store_id: number
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          offer_id: string
+          redeemed_at?: string
+          session_id?: string | null
+          store_id: number
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          offer_id?: string
+          redeemed_at?: string
+          session_id?: string | null
+          store_id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_redemptions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_redemptions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_offers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string | null
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          last_name?: string | null
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sitemap_pings: {
+        Row: {
+          created_at: string
+          google_status: number | null
+          google_success: boolean | null
+          id: string
+          sitemap_url: string | null
+          trigger_reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          google_status?: number | null
+          google_success?: boolean | null
+          id?: string
+          sitemap_url?: string | null
+          trigger_reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          google_status?: number | null
+          google_success?: boolean | null
+          id?: string
+          sitemap_url?: string | null
+          trigger_reason?: string | null
+        }
+        Relationships: []
+      }
+      user_events: {
+        Row: {
+          anonymous_user_id: string | null
+          carousel_id: string | null
+          created_at: string
+          event_action: string
+          event_category: string
+          event_label: string | null
+          event_type: string
+          id: string
+          is_mobile: boolean
+          location_query: string | null
+          merchant_id: number | null
+          metadata: Json | null
+          page_path: string
+          search_term: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          anonymous_user_id?: string | null
+          carousel_id?: string | null
+          created_at?: string
+          event_action: string
+          event_category: string
+          event_label?: string | null
+          event_type: string
+          id?: string
+          is_mobile?: boolean
+          location_query?: string | null
+          merchant_id?: number | null
+          metadata?: Json | null
+          page_path: string
+          search_term?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          anonymous_user_id?: string | null
+          carousel_id?: string | null
+          created_at?: string
+          event_action?: string
+          event_category?: string
+          event_label?: string | null
+          event_type?: string
+          id?: string
+          is_mobile?: boolean
+          location_query?: string | null
+          merchant_id?: number | null
+          metadata?: Json | null
+          page_path?: string
+          search_term?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_events_carousel_id_fkey"
+            columns: ["carousel_id"]
+            isOneToOne: false
+            referencedRelation: "homepage_carousels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          anonymous_user_id: string | null
+          attribution_type: string | null
+          bot_type: string | null
+          created_at: string
+          device_type: string
+          engagement_score: number | null
+          entry_page: string
+          exit_page: string | null
+          first_seen: string
+          first_touch_utm_campaign: string | null
+          first_touch_utm_content: string | null
+          first_touch_utm_medium: string | null
+          first_touch_utm_source: string | null
+          first_touch_utm_term: string | null
+          id: string
+          is_bot: boolean
+          is_bounce: boolean
+          is_engaged: boolean | null
+          last_seen: string
+          referrer_category: string | null
+          referrer_platform: string | null
+          referrer_source: string | null
+          session_duration_seconds: number | null
+          session_id: string
+          traffic_source: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_landing_page: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          viewport_height: number | null
+          viewport_width: number | null
+        }
+        Insert: {
+          anonymous_user_id?: string | null
+          attribution_type?: string | null
+          bot_type?: string | null
+          created_at?: string
+          device_type: string
+          engagement_score?: number | null
+          entry_page: string
+          exit_page?: string | null
+          first_seen?: string
+          first_touch_utm_campaign?: string | null
+          first_touch_utm_content?: string | null
+          first_touch_utm_medium?: string | null
+          first_touch_utm_source?: string | null
+          first_touch_utm_term?: string | null
+          id?: string
+          is_bot?: boolean
+          is_bounce?: boolean
+          is_engaged?: boolean | null
+          last_seen?: string
+          referrer_category?: string | null
+          referrer_platform?: string | null
+          referrer_source?: string | null
+          session_duration_seconds?: number | null
+          session_id: string
+          traffic_source?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_landing_page?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Update: {
+          anonymous_user_id?: string | null
+          attribution_type?: string | null
+          bot_type?: string | null
+          created_at?: string
+          device_type?: string
+          engagement_score?: number | null
+          entry_page?: string
+          exit_page?: string | null
+          first_seen?: string
+          first_touch_utm_campaign?: string | null
+          first_touch_utm_content?: string | null
+          first_touch_utm_medium?: string | null
+          first_touch_utm_source?: string | null
+          first_touch_utm_term?: string | null
+          id?: string
+          is_bot?: boolean
+          is_bounce?: boolean
+          is_engaged?: boolean | null
+          last_seen?: string
+          referrer_category?: string | null
+          referrer_platform?: string | null
+          referrer_source?: string | null
+          session_duration_seconds?: number | null
+          session_id?: string
+          traffic_source?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_landing_page?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile_display_names"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      merchant_offers_public: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string | null
+          is_active: boolean | null
+          offer_description: string | null
+          offer_name: string | null
+          start_time: string | null
+          store_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          offer_description?: string | null
+          offer_name?: string | null
+          start_time?: string | null
+          store_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          offer_description?: string | null
+          offer_name?: string | null
+          start_time?: string | null
+          store_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "Merchant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_display_names: {
+        Row: {
+          first_name: string | null
+          id: string | null
+          last_name_initial: string | null
+        }
+        Insert: {
+          first_name?: string | null
+          id?: string | null
+          last_name_initial?: never
+        }
+        Update: {
+          first_name?: string | null
+          id?: string | null
+          last_name_initial?: never
+        }
+        Relationships: []
+      }
+      restaurants_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          id: number | null
+          is_active: boolean | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          phone_number: string | null
+          restaurant_name: string | null
+          state: string | null
+          street_address: string | null
+          street_address_line_2: string | null
+          updated_at: string | null
+          website: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          phone_number?: string | null
+          restaurant_name?: string | null
+          state?: string | null
+          street_address?: string | null
+          street_address_line_2?: string | null
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          phone_number?: string | null
+          restaurant_name?: string | null
+          state?: string | null
+          street_address?: string | null
+          street_address_line_2?: string | null
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      create_user_events_partition: {
+        Args: { partition_date: string }
+        Returns: undefined
+      }
+      generate_merchant_slug: {
+        Args: {
+          p_city: string
+          p_neighborhood: string
+          p_restaurant_name: string
+        }
+        Returns: string
+      }
+      get_current_user_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_distinct_event_session_ids: {
+        Args: never
+        Returns: {
+          session_id: string
+        }[]
+      }
+      get_orphaned_session_ids: {
+        Args: never
+        Returns: {
+          session_id: string
+        }[]
+      }
+      get_restaurant_details: {
+        Args: { restaurant_id: number }
+        Returns: {
+          city: string
+          created_at: string
+          id: number
+          is_active: boolean
+          latitude: number
+          logo_url: string
+          longitude: number
+          phone_number: string
+          restaurant_name: string
+          state: string
+          street_address: string
+          street_address_line_2: string
+          updated_at: string
+          website: string
+          zip_code: string
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
+      is_merchant_owner: { Args: { _merchant_id: number }; Returns: boolean }
+      maintain_user_events_partitions: { Args: never; Returns: undefined }
+      slugify: { Args: { input_text: string }; Returns: string }
+      update_merchant_coordinates: {
+        Args: { latitude: number; longitude: number; merchant_id: number }
+        Returns: undefined
+      }
+    }
+    Enums: {
+      app_role: "admin" | "restaurant_owner" | "user"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["admin", "restaurant_owner", "user"],
+    },
+  },
+} as const
