@@ -1,0 +1,109 @@
+erDiagram
+    business ||--o{ Merchant : owns
+    Merchant ||--o{ merchant_store_hours : has
+    Merchant ||--o{ merchant_happy_hour : has
+    Merchant ||--o{ happy_hour_deals : has
+    Merchant ||--o{ merchant_events : hosts
+    Merchant ||--o{ merchant_offers : has
+    merchant_offers ||--o{ offer_redemptions : redeemed
+    Merchant ||--o| merchant_google_ratings : rated
+    Merchant ||--o{ merchant_categories : tagged
+    categories ||--o{ merchant_categories : groups
+    categories ||--o{ categories : parent
+    Merchant ||--o{ merchant_listing_issue : reported
+    Merchant ||--o{ merchant_reviews : reviewed
+    merchant_reviews ||--o{ merchant_review_ratings : scores
+    merchant_reviews ||--o{ merchant_review_media : media
+    profiles ||--o{ merchant_reviews : writes
+    profiles ||--o{ user_roles : has
+    profiles ||--o{ merchant_owners : owns
+    Merchant ||--o{ merchant_owners : owned_by
+    profiles ||--o{ favorites : saves
+    Merchant ||--o{ favorites : saved
+    homepage_carousels ||--o{ carousel_merchants : contains
+    Merchant ||--o{ carousel_merchants : featured
+    profiles ||--o{ user_sessions : visits
+    profiles ||--o{ user_events : does
+    Merchant ||--o{ user_events : about
+    homepage_carousels ||--o{ user_events : clicked
+    profiles ||--o{ funnel_events : steps
+    Merchant ||--o{ funnel_events : about
+    business { uuid id PK
+        text business_name }
+    Merchant { int id PK
+        uuid business_id FK
+        text restaurant_name
+        text slug
+        text neighborhood
+        bool is_active }
+    merchant_store_hours { uuid id PK
+        int store_id FK
+        int day_of_week }
+    merchant_happy_hour { uuid id PK
+        int store_id FK
+        int day_of_week }
+    happy_hour_deals { uuid id PK
+        int restaurant_id FK
+        text deal_title
+        text menu_type }
+    merchant_events { int id PK
+        int restaurant_id FK
+        text title
+        text event_type }
+    merchant_offers { uuid id PK
+        int store_id FK
+        text offer_name }
+    offer_redemptions { uuid id PK
+        uuid offer_id FK }
+    merchant_google_ratings { uuid id PK
+        int merchant_id FK
+        numeric google_rating }
+    categories { uuid id PK
+        uuid parent_id FK
+        text name }
+    merchant_categories { uuid id PK
+        int merchant_id FK
+        uuid category_id FK }
+    merchant_listing_issue { uuid id PK
+        int merchant_id FK }
+    merchant_reviews { uuid id PK
+        uuid user_id FK
+        int merchant_id FK
+        text status }
+    merchant_review_ratings { uuid id PK
+        uuid review_id FK
+        int rating }
+    merchant_review_media { uuid id PK
+        uuid review_id FK }
+    profiles { uuid id PK
+        text email }
+    user_roles { uuid id PK
+        uuid user_id FK
+        app_role role }
+    merchant_owners { uuid id PK
+        uuid user_id FK
+        int merchant_id FK
+        text status }
+    favorites { uuid id PK
+        uuid user_id FK
+        int merchant_id FK }
+    homepage_carousels { uuid id PK
+        text name }
+    carousel_merchants { uuid id PK
+        uuid carousel_id FK
+        int merchant_id FK }
+    user_sessions { uuid id PK
+        text session_id
+        uuid user_id FK }
+    user_events { uuid id PK
+        text session_id
+        int merchant_id FK }
+    funnel_events { uuid id PK
+        text funnel_step }
+    donations { uuid id PK
+        int amount_cents
+        text status }
+    location_cache { uuid id PK
+        text original_input }
+    sitemap_pings { uuid id PK
+        bool google_success }
