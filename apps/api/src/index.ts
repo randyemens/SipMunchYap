@@ -15,7 +15,8 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Fly.io defaults to port 8080 and requires binding to 0.0.0.0
+// Port 3000 is reserved for the frontend. Fly sets PORT, or uses its internal_port setting.
+// Bind 0.0.0.0 so the Fly proxy can connect.
 const PORT = Number(process.env.PORT) || 8080;
 const HOST = '0.0.0.0';
 
