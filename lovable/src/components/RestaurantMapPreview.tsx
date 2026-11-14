@@ -31,7 +31,6 @@ export const RestaurantMapPreview: React.FC<RestaurantMapPreviewProps> = ({
 
   // Mapbox Static Images API URL
   // Using the same token as the rest of the app
-  const mapboxToken = "pk.eyJ1IjoiYW5zdXNhbnRvNDY5NCIsImEiOiJjbWNudDdob28weTZlMmtxMTBmbDc5YTM4In0.qwR9SIqDBrETlROMvhnKvw";
   const zoom = 15;
   const width = 800;
   const height = 600;
