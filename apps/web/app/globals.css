@@ -1,21 +1,127 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Height of the sticky top navbar (pages that fill the screen subtract it). */
+  --nav-h: 4rem;
+  --background: #EDECEA;
+  --foreground: #2C2E35;
+  /* Raised surfaces: list panel, drawer, popups, search bar */
+  --surface: #EDECEA;
+  /* Inputs, hover states, chips on top of a surface */
+  --surface-raised: #EDECEA;
+  /* Happy hour pills (list rows + week strip) */
+  --happy-hour: #f4a261;
+  --happy-hour-muted: #e76f51;
+  --happy-hour-soft: rgb(245 158 11 / 0.15);
+  --happy-hour-text: #2C2E35;
+  --happy-hour-deep: #F4A261;
+  /*
+   * Sunset gradient: amber -> coral -> rose -> dusk purple.
+   * ONE gradient shared by the logo bubble and the primary buttons: `bg-sunset`
+   * pins it to the viewport (background-attachment: fixed), so every element
+   * shows the slice of the same gradient that sits behind it. Move the stop
+   * percentages to shift where each color lands on screen.
+   */
+  --sunset-amber: #E14B32;
+  --sunset-coral: #E8AB4E;
+  --sunset-rose: #EAC9B3;
+  --sunset-dusk: #B2C5C3;
+  --sunset-gradient: linear-gradient(
+    135deg,
+    var(--sunset-amber) 18%,
+    var(--sunset-coral) 36%,
+    var(--sunset-rose) 58%,
+    var(--sunset-dusk) 82%
+  );
+  /* Used by `sunset-hover`: tint laid over the gradient while hovering. */
+  --sunset-hover-overlay: rgb(255 255 255 / 0.12);
+
+  /*
+   * Neutral overlays. Derived from --foreground so they flip automatically
+   * with the palette; override with any color if you want them independent.
+   */
+  /* Borders and dividers */
+  --line: color-mix(in srgb, var(--foreground) 12%, transparent);
+  --line-strong: color-mix(in srgb, var(--foreground) 20%, transparent);
+  /* Subtle fills: skeletons, empty states, row hover */
+  --tint: color-mix(in srgb, var(--foreground) 5%, transparent);
+  /* Stronger fills: chips, badges, hover on buttons */
+  --tint-strong: color-mix(in srgb, var(--foreground) 10%, transparent);
+
+  /* Text / icons / overlays that sit ON a gradient or accent-colored fill */
+  --on-accent: #ffffff;
+  /* Tile behind merchant logos (logos are usually designed for white) */
+  --logo-tile: #ffffff;
+  /* Dimmed backdrop behind modals */
+  --scrim: rgb(0 0 0 / 0.4);
+  /* Shadow cast by the list panel and the drawer onto the map */
+  --shadow-panel: rgb(0 0 0 / 0.2);
+
+  /* Orange accent: selected chips, resize handle, store icon */
+  --accent: #f97316;
+  --accent-light: #fb923c;
+  /* Orange text on an accent tint (needs contrast with the background) */
+  --accent-text: #c2410c;
+  /* Currently selected row in the list */
+  --selected: rgb(245 158 11 / 0.1);
+  /* Gradient behind merchants without a logo */
+  --tile-start: rgb(249 115 22 / 0.25);
+  --tile-end: rgb(245 158 11 / 0.25);
+
+  /* Rating star */
+  --star: #f59e0b;
+  /* Error text */
+  --danger: #dc2626;
+  /* Links inside deal descriptions */
+  --link: #2563eb;
+
+  color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-happy-hour: var(--happy-hour);
+  --color-happy-hour-muted: var(--happy-hour-muted);
+  --color-happy-hour-soft: var(--happy-hour-soft);
+  --color-happy-hour-text: var(--happy-hour-text);
+  --color-happy-hour-deep: var(--happy-hour-deep);
+  --color-sunset-amber: var(--sunset-amber);
+  --color-sunset-dusk: var(--sunset-dusk);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-tint: var(--tint);
+  --color-tint-strong: var(--tint-strong);
+  --color-on-accent: var(--on-accent);
+  --color-logo-tile: var(--logo-tile);
+  --color-scrim: var(--scrim);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-text: var(--accent-text);
+  --color-selected: var(--selected);
+  --color-tile-start: var(--tile-start);
+  --color-tile-end: var(--tile-end);
+  --color-star: var(--star);
+  --color-danger: var(--danger);
+  --color-link: var(--link);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Logo bubble + primary buttons: all paint the same viewport-fixed gradient. */
+@utility bg-sunset {
+  background-image: var(--sunset-gradient);
+  background-attachment: fixed;
+}
+
+/* Lightens a bg-sunset element on hover without breaking the shared gradient. */
+@utility sunset-hover {
+  &:hover {
+    background-image:
+      linear-gradient(var(--sunset-hover-overlay), var(--sunset-hover-overlay)),
+      var(--sunset-gradient);
   }
 }
 
@@ -24,3 +130,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Scrollbars: transparent track so the page color shows through; the thumb uses the palette. */
+* {
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-drawer-in {
+  animation: drawer-in 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drawer-in {
+    animation: none;
+  }
+}
+

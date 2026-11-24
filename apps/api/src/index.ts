@@ -1,24 +1,27 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express, { Request, Response } from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import merchantsRouter from "./routes/merchants";
+import eventsRouter from "./routes/events";
+import categoriesRouter from "./routes/categories";
 
 dotenv.config();
 
 const app = express();
 
-// Allow your frontend to make requests to this API
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint for Fly.io and monitoring
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
 });
 
-// Port 3000 is reserved for the frontend. Fly sets PORT, or uses its internal_port setting.
-// Bind 0.0.0.0 so the Fly proxy can connect.
+app.use("/merchants", merchantsRouter);
+app.use("/events", eventsRouter);
+app.use("/categories", categoriesRouter);
+
 const PORT = Number(process.env.PORT) || 8080;
-const HOST = '0.0.0.0';
+const HOST = "0.0.0.0";
 
 app.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
